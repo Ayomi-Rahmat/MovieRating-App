@@ -1,378 +1,155 @@
-import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
-import FilterSidebar from "./components/FilterSidebar";
-import MovieList from "./components/MovieList";
-import MovieForm from "./components/MovieForm";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Home from "./pages/Home";
+import Movies from "./pages/Movies";
+import Series from "./pages/Series";
+import TVShows from "./pages/TVShows";
+import Animation from "./pages/Animation";
+import MovieDetails from "./pages/MovieDetails";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 
-import {
-  getMovies,
-  createMovie,
-  updateMovie,
-  deleteMovie,
-} from "./services/movieService";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-import {
-  isLoggedIn,
-  logout,
-} from "./services/authService";
+import AdminAuth from "./admin/pages/AdminAuth";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminRoute from "./admin/components/AdminRoute";
 
 
 function App() {
-
-  // =============================
-  // AUTHENTICATION
-  // =============================
-
-  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
-  const [showLogin, setShowLogin] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-
-
-  // =============================
-  // MOVIE STATES
-  // =============================
-
-  const [movies, setMovies] = useState([]);
-
-  const [search, setSearch] = useState("");
-
-  const [genre, setGenre] = useState("All");
-
-  const [minRating, setMinRating] = useState("Any");
-
-  const [showForm, setShowForm] = useState(false);
-
-  const [editingMovie, setEditingMovie] = useState(null);
-
-  const [loading, setLoading] = useState(false);
-
-  const [error, setError] = useState("");
-
-
-  // =============================
-  // LOAD MOVIES
-  // =============================
-
-  useEffect(() => {
-
-    const load = async () => {
-
-      try {
-
-        setLoading(true);
-        setError("");
-
-        const data = await getMovies(
-          genre === "All" ? "" : genre,
-          minRating === "Any" ? "" : minRating
-        );
-
-        setMovies(data);
-
-      } catch (err) {
-
-        console.error(err);
-
-        setError(
-          "Unable to connect to the movie server."
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
-
-    load();
-
-  }, [genre, minRating]);
-
-
-  // =============================
-  // SEARCH MOVIES
-  // =============================
-
-  const filteredMovies = movies.filter((movie) =>
-    movie.title
-      ?.toLowerCase()
-      .includes(search.toLowerCase())
-  );
-
-
-  // =============================
-  // ADD MOVIE
-  // =============================
-
-  const handleAddMovie = () => {
-
-    if (!loggedIn) {
-      setShowLogin(true);
-      return;
-    }
-
-    setEditingMovie(null);
-    setShowForm(true);
-
-  };
-
-
-  // =============================
-  // EDIT MOVIE
-  // =============================
-
-  const handleEditMovie = (movie) => {
-
-    if (!loggedIn) {
-      setShowLogin(true);
-      return;
-    }
-
-    setEditingMovie(movie);
-    setShowForm(true);
-
-  };
-
-
-  // =============================
-  // SAVE MOVIE
-  // =============================
-
-  const handleSubmitMovie = async (movieData) => {
-
-    try {
-
-      setError("");
-
-      if (editingMovie) {
-
-        await updateMovie(
-          editingMovie.id,
-          movieData
-        );
-
-      } else {
-
-        await createMovie(movieData);
-
-      }
-
-      setShowForm(false);
-      setEditingMovie(null);
-
-      // Reload movies
-      const data = await getMovies(
-        genre === "All" ? "" : genre,
-        minRating === "Any" ? "" : minRating
-      );
-
-      setMovies(data);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setError(
-        err.message || "Unable to save movie."
-      );
-
-    }
-
-  };
-
-
-  // =============================
-  // DELETE MOVIE
-  // =============================
-
-  const handleDeleteMovie = async (id) => {
-
-    if (!loggedIn) {
-      setShowLogin(true);
-      return;
-    }
-
-    try {
-
-      setError("");
-
-      await deleteMovie(id);
-
-      const data = await getMovies(
-        genre === "All" ? "" : genre,
-        minRating === "Any" ? "" : minRating
-      );
-
-      setMovies(data);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setError(
-        err.message || "Unable to delete movie."
-      );
-
-    }
-
-  };
-
-
-  // =============================
-  // LOGIN
-  // =============================
-
-  const handleLogin = () => {
-
-    setLoggedIn(true);
-    setShowLogin(false);
-
-  };
-
-
-  // =============================
-  // LOGOUT
-  // =============================
-
-  const handleLogout = () => {
-
-    logout();
-
-    setLoggedIn(false);
-
-  };
-
-  if (window.location.pathname === "/payment-success") {
-    return <PaymentSuccess />;
-  }
-
-  // =============================
-  // UI
-  // =============================
-
   return (
-    <div className="min-h-screen bg-[#0f0e0c] text-[#f5f1e8]">
+    <Routes>
 
-      {/* Navbar */}
-      <Navbar
-        onAddMovie={handleAddMovie}
-        onLogin={() => setShowLogin(true)}
-        onLogout={handleLogout}
-        onPayment={() => setShowPayment(true)}
-        loggedIn={loggedIn}
+      {/* ================================
+          AUTHENTICATION
+          ================================ */}
+
+      <Route
+        path="/login"
+        element={<Login />}
+      />
+
+      <Route
+        path="/register"
+        element={<Register />}
       />
 
 
-      {/* Main content */}
-      <main className="flex">
+      {/* ================================
+          PUBLIC MOVIE PAGES
+          ================================ */}
 
-        {/* Sidebar */}
-        <FilterSidebar
-          genre={genre}
-          setGenre={setGenre}
-          minRating={minRating}
-          setMinRating={setMinRating}
-        />
+      <Route
+        path="/movies"
+        element={<Movies />}
+      />
+
+      <Route
+        path="/series"
+        element={<Series />}
+      />
+
+      <Route
+        path="/tv-shows"
+        element={<TVShows />}
+      />
+
+      <Route
+        path="/animation"
+        element={<Animation />}
+      />
+
+      <Route
+        path="/movie/:id"
+        element={<MovieDetails />}
+      />
 
 
-        {/* Movies */}
-        <section className="flex-1 p-7">
+      {/* ================================
+          PROTECTED HOME PAGE
+          ================================ */}
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-7">
-
-            <div>
-              <h2 className="text-2xl font-semibold">
-                Movie Catalogue
-              </h2>
-
-              <p className="text-gray-400 mt-1">
-                Discover and manage your movies.
-              </p>
-            </div>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
 
 
-            {/* Search */}
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search movies..."
-              className="w-full md:w-64 px-4 py-2 bg-[#1c1a17] border border-[#332d24] rounded-md text-white outline-none focus:border-[#d9a441]"
+      {/* ================================
+          PROTECTED PAYMENT PAGE
+          ================================ */}
+
+      <Route
+        path="/payment"
+        element={
+          <ProtectedRoute>
+            <Payment />
+          </ProtectedRoute>
+        }
+      />
+
+
+      {/* ================================
+          PAYMENT SUCCESS
+          ================================ */}
+
+      <Route
+        path="/payment-success"
+        element={
+          <ProtectedRoute>
+            <PaymentSuccess />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================================
+          ADMIN DASHBOARD
+          ================================ */}
+
+      <Route
+                path="/admin/login"
+                element={
+                    <AdminAuth mode="login" />
+                }
             />
 
-          </div>
-
-
-          {/* Error */}
-          {error && (
-            <div className="mb-5 p-4 border border-red-900 bg-red-950/30 text-red-400 rounded-md">
-              {error}
-            </div>
-          )}
-
-
-          {/* Loading */}
-          {loading ? (
-
-            <div className="text-gray-400">
-              Loading movies...
-            </div>
-
-          ) : (
-
-            <MovieList
-              movies={filteredMovies}
-              onEdit={handleEditMovie}
-              onDelete={handleDeleteMovie}
+            <Route
+                path="/admin/register"
+                element={
+                    <AdminAuth mode="register" />
+                }
             />
 
-          )}
+            <Route
+                path="/admin"
+                element={
+                    <AdminRoute>
+                        <AdminDashboard />
+                    </AdminRoute>
+                }
+            />
 
-        </section>
+             {/* ================================
+          UNKNOWN URL
+          ================================ */}
 
-      </main>
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to="/"
+            replace
+          />
+        }
+      />
 
-
-      {/* Movie Form */}
-      {showForm && (
-
-        <MovieForm
-          movie={editingMovie}
-          onSubmit={handleSubmitMovie}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingMovie(null);
-          }}
-        />
-
-      )}
-
-
-      {/* Login Modal */}
-      {showLogin && !loggedIn && (
-
-        <Login
-          onLogin={handleLogin}
-          onClose={() => setShowLogin(false)}
-        />
-
-      )}
-
-      {showPayment && (
-        <Payment
-          onClose={() => setShowPayment(false)}
-        />
-      )}
-
-    </div>
+    </Routes>
   );
 }
 

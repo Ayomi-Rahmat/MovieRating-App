@@ -1,122 +1,140 @@
 const API_URL = "http://localhost:8081/movies";
 
-const getHeaders = () => {
-  const token = localStorage.getItem("token");
 
-  return {
-    "Content-Type": "application/json",
-    ...(token && {
-      Authorization: `Bearer ${token}`,
-    }),
-  };
-};
-
-
-// =============================
+// =========================================================
 // GET ALL MOVIES
-// =============================
+// =========================================================
 
-export const getMovies = async (genre = "", minRating = "") => {
-  const params = new URLSearchParams();
+export const getMovies = async ({
+  genre = "",
+  movieType = "",
+  minRating = "",
+} = {}) => {
+
+  const params =
+    new URLSearchParams();
+
 
   if (genre) {
-    params.append("genre", genre);
+    params.append(
+      "genre",
+      genre
+    );
   }
 
-  if (minRating) {
-    params.append("minRating", minRating);
+
+  if (movieType) {
+    params.append(
+      "movieType",
+      movieType
+    );
   }
 
-  const url = params.toString()
-    ? `${API_URL}?${params.toString()}`
-    : API_URL;
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: getHeaders(),
-  });
+  if (
+    minRating !== "" &&
+    minRating !== null
+  ) {
+    params.append(
+      "minRating",
+      minRating
+    );
+  }
+
+
+  const queryString =
+    params.toString();
+
+
+  const url =
+    queryString
+      ? `${API_URL}?${queryString}`
+      : API_URL;
+
+
+  const response =
+    await fetch(url);
+
 
   if (!response.ok) {
-    throw new Error("Failed to fetch movies");
+
+    throw new Error(
+      "Failed to fetch movies"
+    );
   }
 
-  return await response.json();
+
+  return response.json();
 };
 
 
-// =============================
-// GET ONE MOVIE
-// =============================
+// =========================================================
+// SEARCH MOVIES
+// =========================================================
 
-export const getMovieById = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "GET",
-    headers: getHeaders(),
-  });
+export const searchMovies = async (
+  query
+) => {
 
-  if (!response.ok) {
-    throw new Error("Movie not found");
+  const params =
+    new URLSearchParams();
+
+
+  if (query) {
+
+    params.append(
+      "search",
+      query
+    );
   }
 
-  return await response.json();
+
+  const queryString =
+    params.toString();
+
+
+  const url =
+    queryString
+      ? `${API_URL}?${queryString}`
+      : API_URL;
+
+
+  const response =
+    await fetch(url);
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      "Failed to search movies"
+    );
+  }
+
+
+  return response.json();
 };
 
 
-// =============================
-// CREATE MOVIE
-// =============================
+// =========================================================
+// GET MOVIE BY ID
+// =========================================================
 
-export const createMovie = async (movie) => {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(movie),
-  });
+export const getMovieById =
+  async (id) => {
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to create movie");
-  }
-
-  return data.data;
-};
+    const response =
+      await fetch(
+        `${API_URL}/${id}`
+      );
 
 
-// =============================
-// UPDATE MOVIE
-// =============================
+    if (!response.ok) {
 
-export const updateMovie = async (id, movie) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify(movie),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to update movie");
-  }
-
-  return data.data;
-};
+      throw new Error(
+        "Failed to fetch movie"
+      );
+    }
 
 
-// =============================
-// DELETE MOVIE
-// =============================
-
-export const deleteMovie = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-    headers: getHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to delete movie");
-  }
-
-  return await response.text();
-};
+    return response.json();
+  };

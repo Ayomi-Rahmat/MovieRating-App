@@ -8,11 +8,11 @@ import {
 } from "react-router-dom";
 
 import {
-  login,
+  register,
 } from "../services/authService";
 
 
-function Login() {
+function Register() {
 
   const navigate =
     useNavigate();
@@ -22,6 +22,9 @@ function Login() {
     useState("");
 
   const [password, setPassword] =
+    useState("");
+
+  const [confirmPassword, setConfirmPassword] =
     useState("");
 
   const [error, setError] =
@@ -37,24 +40,43 @@ function Login() {
       event.preventDefault();
 
       setError("");
+
+
+      if (
+        password !== confirmPassword
+      ) {
+
+        setError(
+          "Passwords do not match."
+        );
+
+        return;
+      }
+
+
       setLoading(true);
 
 
       try {
 
-        await login(
+        await register(
           username,
           password
         );
 
 
-        navigate("/");
+        // Registration does NOT
+        // automatically log the user in.
+        //
+        // We send them to login.
+
+        navigate("/login");
 
       } catch (error) {
 
         setError(
           error.message ||
-          "Login failed"
+          "Registration failed"
         );
 
       } finally {
@@ -75,12 +97,12 @@ function Login() {
 
 
         <h1>
-          Welcome back
+          Create your account
         </h1>
 
         <p className="auth-subtitle">
-          Log in to continue watching and
-          rating movies.
+          Join Movie Rating and discover
+          movies worth watching.
         </p>
 
 
@@ -109,7 +131,7 @@ function Login() {
                   e.target.value
                 )
               }
-              placeholder="Enter your username"
+              placeholder="Choose a username"
               required
             />
 
@@ -127,7 +149,25 @@ function Login() {
                   e.target.value
                 )
               }
-              placeholder="Enter your password"
+              placeholder="Create a password"
+              required
+            />
+
+          </label>
+
+
+          <label>
+            Confirm Password
+
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) =>
+                setConfirmPassword(
+                  e.target.value
+                )
+              }
+              placeholder="Confirm your password"
               required
             />
 
@@ -141,8 +181,8 @@ function Login() {
           >
 
             {loading
-              ? "Logging in..."
-              : "Log In"}
+              ? "Creating account..."
+              : "Create Account"}
 
           </button>
 
@@ -151,12 +191,12 @@ function Login() {
 
         <p className="auth-switch">
 
-          Don't have an account?
+          Already have an account?
 
           {" "}
 
-          <Link to="/register">
-            Create one
+          <Link to="/login">
+            Log in
           </Link>
 
         </p>
@@ -167,4 +207,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;

@@ -1,136 +1,164 @@
-import { useState } from "react";
-import { X, CreditCard } from "lucide-react";
-import { initiatePayment } from "../services/paymentService";
+import {
+  useState,
+} from "react";
 
-function Payment({ onClose }) {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+import {
+  useNavigate,
+} from "react-router-dom";
 
-  const handlePayment = async (e) => {
-    e.preventDefault();
+import Navbar from "../components/Navbar";
 
-    setLoading(true);
-    setError("");
+import {
+  initiatePayment,
+} from "../services/paymentService";
 
-    try {
-      const data = await initiatePayment(email);
 
-      console.log("Payment initialized:", data);
+function Payment() {
 
-      // Send the customer to Monnify's payment page
-      window.location.href = data.checkoutUrl;
+  const navigate =
+    useNavigate();
 
-    } catch (err) {
-      console.error("Payment error:", err);
 
-      setError(
-        err.message || "Unable to start payment."
-      );
+  const [email, setEmail] =
+    useState("");
 
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+
+  const handlePayment =
+    async (event) => {
+
+      event.preventDefault();
+
+      setError("");
+      setLoading(true);
+
+
+      try {
+
+        const payment =
+          await initiatePayment(
+            email
+          );
+
+
+        if (
+          !payment.checkoutUrl
+        ) {
+
+          throw new Error(
+            "Payment checkout URL was not returned."
+          );
+        }
+
+
+        // Save reference so the
+        // success page can verify it.
+
+        localStorage.setItem(
+          "paymentReference",
+          payment.paymentReference
+        );
+
+
+        window.location.href =
+          payment.checkoutUrl;
+
+      } catch (error) {
+
+        setError(
+          error.message
+        );
+
+        setLoading(false);
+      }
+    };
+
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
+    <div className="app">
 
-      <div className="relative w-full max-w-md bg-[#12110f] border border-[#332d24] rounded-xl p-8 shadow-2xl">
+      <Navbar />
 
-        {/* CLOSE BUTTON */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
-        >
-          <X size={20} />
-        </button>
 
-        {/* HEADER */}
-        <div className="mb-6">
+      <main className="payment-page">
 
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 bg-[#d9a441]/10 rounded-lg">
-              <CreditCard
-                size={22}
-                className="text-[#d9a441]"
-              />
-            </div>
+        <div className="payment-card">
 
-            <h2 className="text-2xl font-semibold text-[#f5f1e8]">
-              Reel Rating VIP
-            </h2>
-          </div>
+          <span className="premium-label">
+            PREMIUM
+          </span>
 
-          <p className="text-gray-400">
-            Unlock access to Reel Rating VIP.
+
+          <h1>
+            Unlock Premium
+          </h1>
+
+
+          <p>
+            Get access to the premium
+            Movie Rating experience.
           </p>
 
-        </div>
 
-        {/* PRICE */}
-        <div className="mb-6 p-4 bg-[#1c1a17] rounded-lg border border-[#332d24]">
-
-          <p className="text-sm text-gray-400">
-            VIP Subscription
-          </p>
-
-          <p className="text-3xl font-semibold text-[#d9a441] mt-1">
+          <div className="payment-price">
             ₦4,999
-          </p>
-
-        </div>
-
-        {/* PAYMENT FORM */}
-        <form
-          onSubmit={handlePayment}
-          className="space-y-5"
-        >
-
-          {/* EMAIL */}
-          <div>
-            <label className="block text-sm text-gray-300 mb-2">
-              Email address
-            </label>
-
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              placeholder="you@example.com"
-              required
-              className="w-full px-4 py-3 bg-[#1c1a17] border border-[#332d24] rounded-md text-white outline-none focus:border-[#d9a441]"
-            />
-
-            <p className="text-xs text-gray-500 mt-2">
-              This email will be used for your payment.
-            </p>
           </div>
 
-          {/* ERROR */}
+
           {error && (
-            <div className="p-3 bg-red-950/30 border border-red-900 rounded-md">
-              <p className="text-sm text-red-400">
-                {error}
-              </p>
+
+            <div className="error-message">
+              {error}
             </div>
+
           )}
 
-          {/* PAY BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-[#d9a441] text-black font-medium rounded-md hover:bg-[#e5b85d] transition disabled:opacity-50"
+
+          <form
+            onSubmit={handlePayment}
+            className="auth-form"
           >
-            {loading
-              ? "Preparing payment..."
-              : "Pay ₦4,999"}
-          </button>
 
-        </form>
+            <label>
+              Email address
 
-      </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) =>
+                  setEmail(
+                    e.target.value
+                  )
+                }
+                placeholder="you@example.com"
+                required
+              />
+
+            </label>
+
+
+            <button
+              type="submit"
+              className="primary-button full-width"
+              disabled={loading}
+            >
+
+              {loading
+                ? "Preparing payment..."
+                : "Pay ₦4,999"}
+
+            </button>
+
+          </form>
+
+        </div>
+
+      </main>
 
     </div>
   );

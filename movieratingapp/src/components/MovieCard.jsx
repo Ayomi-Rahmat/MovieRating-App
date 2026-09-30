@@ -1,73 +1,81 @@
-import { Star, Pencil, Trash2 } from "lucide-react";
+import {
+  Star,
+} from "lucide-react";
 
-function MovieCard({ movie, onEdit, onDelete }) {
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import movieImages from "../assets/movieImages";
+
+
+function MovieCard({ movie }) {
+
+  const navigate =
+    useNavigate();
+
+  const poster = movieImages[movie.title];
+
 
   return (
-    <div className="border border-[#332d24] bg-[#171512] rounded-lg p-5 hover:border-[#51452f] transition">
+    <article
+      className="movie-card"
+      onClick={() =>
+        navigate(`/movie/${movie.id}`)
+      }
+    >
 
-      {/* Header */}
-      <div className="flex justify-between items-start gap-4">
+      <div className="movie-poster">
 
-        <div>
-          <h2 className="text-xl font-semibold text-[#f5f1e8]">
-            {movie.title}
-          </h2>
+        {poster ? (
+          <img src={poster} 
+               alt = {`${movie.title} poster`}
+               className="movie-poster-image" 
+          />
+        ) : (
 
-          <p className="text-sm text-[#9c958a] mt-1">
-            {movie.genre}
-            {movie.releaseYear && ` • ${movie.releaseYear}`}
-          </p>
-        </div>
+          <div className="poster-placeholder">
+            {movie.title
+              ?.charAt(0)
+              ?.toUpperCase()
+            }
+          </div>
 
+        )}
 
-        {/* Rating */}
-        <div className="flex items-center gap-1 text-[#d9a441]">
-          <Star size={16} fill="currentColor" />
+        
 
-          <span className="font-semibold">
-            {movie.averageRating?.toFixed(1) ?? "0.0"}
-          </span>
+        <div className="movie-rating">
+
+          <Star
+            size={14}
+            fill="currentColor"
+          />
+
+          {movie.averageRating?.toFixed(1)}
+
         </div>
 
       </div>
 
 
-      {/* Description */}
-      <p className="text-sm text-[#aaa195] mt-4 leading-6">
-        {movie.description || "No description available."}
-      </p>
+      <div className="movie-card-info">
 
+        <h3>
+          {movie.title}
+        </h3>
 
-      {/* Bottom */}
-      <div className="flex justify-between items-center mt-5 pt-4 border-t border-[#302a23]">
+        <p>
+          {movie.genre}
+        </p>
 
-        <span className="text-xs text-[#80786c]">
-          {movie.totalRating ?? 0} ratings
+        <span>
+          {movie.releaseYear}
         </span>
 
-
-        <div className="flex gap-2">
-
-          <button
-            onClick={() => onEdit(movie)}
-            className="p-2 rounded-md border border-[#3a3329] hover:border-[#d9a441] hover:text-[#d9a441] transition"
-          >
-            <Pencil size={15} />
-          </button>
-
-
-          <button
-            onClick={() => onDelete(movie.id)}
-            className="p-2 rounded-md border border-[#3a3329] hover:border-red-500 hover:text-red-500 transition"
-          >
-            <Trash2 size={15} />
-          </button>
-
-        </div>
-
       </div>
 
-    </div>
+    </article>
   );
 }
 

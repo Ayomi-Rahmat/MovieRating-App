@@ -1,74 +1,225 @@
 import {
-  Film,
-  Sparkles,
-  LogIn,
+  Search,
   LogOut,
-  CreditCard,
+  Crown,
+  Menu,
+  X,
 } from "lucide-react";
 
-function Navbar({
-  onAddMovie,
-  onLogin,
-  onLogout,
-  onPayment,
-  loggedIn,
-}) {
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  logout,
+} from "../services/authService";
+
+import { useState } from "react";
+
+
+function Navbar() {
+
+  const navigate =
+    useNavigate();
+
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  const [search, setSearch] =
+    useState("");
+
+
+  const handleLogout = () => {
+
+    logout();
+
+    navigate("/login");
+  };
+
+
+  const handleSearch = (event) => {
+
+    event.preventDefault();
+
+
+    if (!search.trim()) {
+      return;
+    }
+
+
+    navigate(
+      `/movies?search=${encodeURIComponent(
+        search
+      )}`
+    );
+
+    setSearch("");
+    setMenuOpen(false);
+  };
+
+
   return (
-    <nav className="h-16 border-b border-[#332d24] flex items-center justify-between px-7 bg-[#12110f]">
+    <nav className="navbar">
 
-      {/* Logo / App name */}
-      <div className="flex items-center gap-2">
-        <Film
-          size={22}
-          className="text-[#d9a441]"
-        />
+      <div className="navbar-inner">
 
-        <h1 className="text-xl font-semibold text-[#f5f1e8]">
-          Movie Rating
-        </h1>
+        {/* LOGO */}
+        <Link
+          to="/"
+          className="logo"
+        >
+          MOVIE<span>RATING</span>
+        </Link>
+
+
+        {/* DESKTOP SEARCH */}
+        <form
+          className="navbar-search"
+          onSubmit={handleSearch}
+        >
+
+          <Search size={18} />
+
+          <input
+            type="text"
+            placeholder="Search movies..."
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+          />
+
+        </form>
+
+
+        {/* DESKTOP NAV */}
+        <div className="navbar-links">
+
+          <Link to="/">
+            Home
+          </Link>
+
+          <Link to="/movies">
+            Movies
+          </Link>
+
+          <Link to="/series">
+            Series
+          </Link>
+
+          <Link to="/tv-shows">
+            TV Shows
+          </Link>
+
+          <Link to="/animation">
+            Animation
+          </Link>
+
+        </div>
+
+
+        {/* ACTIONS */}
+        <div className="navbar-actions">
+
+          <button
+            className="premium-button"
+            onClick={() =>
+              navigate("/payment")
+            }
+          >
+            <Crown size={17} />
+            Premium
+          </button>
+
+
+          <button
+            className="icon-button"
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
+
+
+          <button
+            className="menu-button"
+            onClick={() =>
+              setMenuOpen(!menuOpen)
+            }
+          >
+            {menuOpen
+              ? <X />
+              : <Menu />
+            }
+          </button>
+
+        </div>
+
       </div>
 
-      {/* Right side buttons */}
-      <div className="flex items-center gap-3">
 
-        {/* PAYMENT BUTTON */}
-        <button
-          onClick={onPayment}
-          className="flex items-center gap-2 px-4 py-2 border border-[#d9a441] rounded-md text-[#d9a441] hover:bg-[#d9a441] hover:text-black transition"
-        >
-          <CreditCard size={16} />
-          Pay for VIP
-        </button>
+      {/* MOBILE MENU */}
+      {menuOpen && (
 
-        {/* ADD MOVIE */}
-        <button
-          onClick={onAddMovie}
-          className="flex items-center gap-2 px-4 py-2 border border-[#d9a441] rounded-md text-[#d9a441] hover:bg-[#d9a441] hover:text-black transition"
-        >
-          <Sparkles size={16} />
-          Add Movie
-        </button>
+        <div className="mobile-menu">
 
-        {/* LOGIN / LOGOUT */}
-        {loggedIn ? (
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-[#d9a441] text-black rounded-md hover:bg-[#e5b85d] transition"
+          <Link
+            to="/"
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
-            <LogOut size={16} />
-            Log out
-          </button>
-        ) : (
-          <button
-            onClick={onLogin}
-            className="flex items-center gap-2 px-4 py-2 bg-[#d9a441] text-black rounded-md hover:bg-[#e5b85d] transition"
-          >
-            <LogIn size={16} />
-            Log in
-          </button>
-        )}
+            Home
+          </Link>
 
-      </div>
+          <Link
+            to="/movies"
+            onClick={() =>
+              setMenuOpen(false)
+            }
+          >
+            Movies
+          </Link>
+
+          <Link
+            to="/series"
+            onClick={() =>
+              setMenuOpen(false)
+            }
+          >
+            Series
+          </Link>
+
+          <Link
+            to="/tv-shows"
+            onClick={() =>
+              setMenuOpen(false)
+            }
+          >
+            TV Shows
+          </Link>
+
+          <Link
+            to="/animation"
+            onClick={() =>
+              setMenuOpen(false)
+            }
+          >
+            Animation
+          </Link>
+
+          <button
+            onClick={handleLogout}
+          >
+            <LogOut size={17} />
+            Logout
+          </button>
+
+        </div>
+
+      )}
+
     </nav>
   );
 }

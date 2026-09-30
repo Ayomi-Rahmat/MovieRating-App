@@ -1,199 +1,193 @@
-import { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Loader } from "lucide-react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useSearchParams,
+} from "react-router-dom";
+
+import Navbar from "../components/Navbar";
+
+import {
+  verifyPayment,
+} from "../services/paymentService";
+
 
 function PaymentSuccess() {
-  const [status, setStatus] = useState("checking");
-  const [message, setMessage] = useState(
-    "Checking your payment..."
-  );
+
+  const [
+    searchParams
+  ] = useSearchParams();
+
+
+  const [
+    payment,
+    setPayment
+  ] = useState(null);
+
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
 
   useEffect(() => {
 
-    const verifyPayment = async () => {
+    const verify =
+      async () => {
 
-      // Get information Monnify sent back in the URL
-      const params =
-        new URLSearchParams(
-          window.location.search
-        );
+        try {
 
-      const paymentReference =
-        params.get("paymentReference");
-
-      const paymentStatus =
-        params.get("paymentStatus");
-
-      console.log(
-        "Payment reference:",
-        paymentReference
-      );
-
-      console.log(
-        "Payment status from Monnify:",
-        paymentStatus
-      );
+          const reference =
+            searchParams.get(
+              "paymentReference"
+            ) ||
+            localStorage.getItem(
+              "paymentReference"
+            );
 
 
-      // We need the payment reference
-      if (!paymentReference) {
+          if (!reference) {
 
-        setStatus("failed");
-
-        setMessage(
-          "No payment reference was found."
-        );
-
-        return;
-      }
+            throw new Error(
+              "No payment reference was found."
+            );
+          }
 
 
-      try {
+          const data =
+            await verifyPayment(
+              reference
+            );
 
-        // Ask OUR BACKEND to verify with Monnify
-        const response = await fetch(
-          `http://localhost:8081/api/payment/verify?paymentReference=${encodeURIComponent(
-            paymentReference
-          )}`
-        );
 
-        if (!response.ok) {
-          throw new Error(
-            "Payment verification failed."
+          setPayment(data);
+
+        } catch (error) {
+
+          setError(
+            error.message
           );
+
+        } finally {
+
+          setLoading(false);
         }
-
-        const payment =
-          await response.json();
-
-        console.log(
-          "Verified payment:",
-          payment
-        );
+      };
 
 
-        // Check payment status
-        if (
-          payment.paymentStatus === "PAID"
-          &&
-          Number(payment.amountPaid) >= 4999
-        ) {
+    verify();
 
-          setStatus("success");
-
-          setMessage(
-            "Your payment was successful! VIP access has been confirmed."
-          );
-
-        } else {
-
-          setStatus("failed");
-
-          setMessage(
-            "We could not confirm your payment."
-          );
-        }
-
-      } catch (error) {
-
-        console.error(
-          "Verification error:",
-          error
-        );
-
-        setStatus("failed");
-
-        setMessage(
-          "We were unable to verify your payment. Please try again."
-        );
-      }
-    };
-
-
-    verifyPayment();
-
-  }, []);
+  }, [searchParams]);
 
 
   return (
-    <div className="min-h-screen bg-[#12110f] flex items-center justify-center p-6">
+    <div className="app">
 
-      <div className="w-full max-w-md bg-[#1c1a17] border border-[#332d24] rounded-xl p-8 text-center">
-
-        {/* CHECKING */}
-        {status === "checking" && (
-          <>
-            <Loader
-              size={50}
-              className="text-[#d9a441] mx-auto mb-5 animate-spin"
-            />
-
-            <h1 className="text-2xl font-semibold text-white">
-              Checking payment
-            </h1>
-
-            <p className="text-gray-400 mt-3">
-              Please wait while we confirm your payment with Monnify.
-            </p>
-          </>
-        )}
+      <Navbar />
 
 
-        {/* SUCCESS */}
-        {status === "success" && (
-          <>
-            <CheckCircle
-              size={60}
-              className="text-green-400 mx-auto mb-5"
-            />
+      <main className="payment-page">
 
-            <h1 className="text-2xl font-semibold text-white">
-              Payment Successful!
-            </h1>
+        <div className="payment-card">
 
-            <p className="text-gray-400 mt-3">
-              {message}
-            </p>
+          {loading && (
 
-            <button
-              onClick={() =>
-                window.location.href = "/"
-              }
-              className="mt-6 px-6 py-3 bg-[#d9a441] text-black rounded-md hover:bg-[#e5b85d] transition"
-            >
-              Back to Reel Rating
-            </button>
-          </>
-        )}
+            <>
+
+              <h1>
+                Verifying payment...
+              </h1>
+
+              <p>
+                Please wait while we
+                confirm your transaction.
+              </p>
+
+            </>
+
+          )}
 
 
-        {/* FAILED */}
-        {status === "failed" && (
-          <>
-            <XCircle
-              size={60}
-              className="text-red-400 mx-auto mb-5"
-            />
+          {!loading &&
+            error && (
 
-            <h1 className="text-2xl font-semibold text-white">
-              Payment Could Not Be Confirmed
-            </h1>
+            <>
 
-            <p className="text-gray-400 mt-3">
-              {message}
-            </p>
+              <h1>
+                Payment verification failed
+              </h1>
 
-            <button
-              onClick={() =>
-                window.location.href = "/"
-              }
-              className="mt-6 px-6 py-3 border border-[#d9a441] text-[#d9a441] rounded-md hover:bg-[#d9a441] hover:text-black transition"
-            >
-              Back to Reel Rating
-            </button>
-          </>
-        )}
+              <div className="error-message">
+                {error}
+              </div>
 
-      </div>
+              <Link
+                to="/payment"
+                className="primary-button"
+              >
+                Try Again
+              </Link>
+
+            </>
+
+          )}
+
+
+          {!loading &&
+            !error &&
+            payment && (
+
+            <>
+
+              <h1>
+                Payment Status
+              </h1>
+
+              <p>
+                Status:{" "}
+                <strong>
+                  {payment.paymentStatus}
+                </strong>
+              </p>
+
+
+              {payment.paymentStatus ===
+                "PAID" ? (
+
+                <div className="success-message">
+                  Your payment has been
+                  successfully verified.
+                </div>
+
+              ) : (
+
+                <div className="error-message">
+                  Your payment has not
+                  been confirmed as paid.
+                </div>
+
+              )}
+
+
+              <Link
+                to="/"
+                className="primary-button"
+              >
+                Back to Home
+              </Link>
+
+            </>
+
+          )}
+
+        </div>
+
+      </main>
 
     </div>
   );
